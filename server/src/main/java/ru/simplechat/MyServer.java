@@ -28,12 +28,7 @@ public class MyServer {
                 try {
                     BufferedReader in = new BufferedReader(new InputStreamReader(System.in, Charset.forName("UTF-8")));
                     String input = in.readLine();
-                    if (("-exit").equals(input)) {
-                        System.out.println("Остановка сервера...");
-                        repeat = false;
-                        Socket stopSocket = new Socket("localhost", PORT);
-                        stopSocket.close();
-                    }
+                    tryRunCommand(input);
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
@@ -78,6 +73,15 @@ public class MyServer {
 
     public static void deleteHandler(ClientHandler clientHandler) {
         if (connections.contains(clientHandler)) connections.remove(clientHandler);
+    }
+
+    public static void tryRunCommand(String command) throws IOException {
+        if (("-exit").equals(command)) {
+            System.out.println("Остановка сервера...");
+            repeat = false;
+            Socket stopSocket = new Socket("localhost", PORT);
+            stopSocket.close();
+        }
     }
 
     public static LastMessage getLastMessage() {

@@ -90,6 +90,10 @@ public class ClientHandler extends Thread {
         return username;
     }
 
+    public void setUsername(String username) {
+        this.username = username;
+    }
+
     public boolean checkLogin(String login){
         boolean newHasLogin = false;
         if (login.trim().length() > 0 && !MyServer.loginExist(login)) {
