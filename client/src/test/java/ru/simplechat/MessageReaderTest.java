@@ -25,6 +25,8 @@ public class MessageReaderTest {
         MessageReader mr = new MessageReader(in);
         Thread readerThread = new Thread(mr);
         readerThread.start();
+        //Добавим sleep чтобы нить с ридером успела запуститься и прочитать поток
+        Thread.sleep(1000);
         assertEquals(inputString, mr.getLastInput());
     }
 }
