@@ -2,23 +2,21 @@ package ru.simplechat;
 
 import org.junit.Before;
 import org.junit.Test;
-import ru.simplechat.utils.PropertyLoader;
 
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.net.ServerSocket;
-import java.net.Socket;
-import java.nio.charset.Charset;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertNotNull;
 
 /**
  * Created by Ivan on 20.11.2017.
  */
 public class ClientTest {
+    Client client;
+
     @Before
-    public void before() throws Exception{
+    public void before() throws Exception {
+        client = new Client();
         Thread thread = new Thread() {
             public void run() {
                 try {
@@ -35,6 +33,6 @@ public class ClientTest {
 
     @Test
     public void testCreateSocket() throws Exception {
-        assertNotNull(Client.createSocket("localhost", 8888));
+        assertNotNull(client.createSocket("localhost", 8888));
     }
 }
