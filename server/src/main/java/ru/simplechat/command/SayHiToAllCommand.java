@@ -6,6 +6,7 @@ import ru.simplechat.MyServer;
  * Created by Ivan on 19.11.2017.
  */
 public class SayHiToAllCommand extends Command {
+    private MyServer myServer = MyServer.getInstance();
 
     public SayHiToAllCommand() {
         setCommandName("sayHello");
@@ -15,7 +16,7 @@ public class SayHiToAllCommand extends Command {
     @Override
     public String runCommand(String author) {
         String hello = author + " передает всем привет";
-        MyServer.sendToAllConnections(false, author, hello);
+        myServer.sendToAllConnections(false, author, hello);
         return "Вы передали всем \"Привет\"";
     }
 }

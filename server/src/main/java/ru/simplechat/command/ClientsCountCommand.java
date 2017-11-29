@@ -6,6 +6,7 @@ import ru.simplechat.MyServer;
  * Created by Ivan on 19.11.2017.
  */
 public class ClientsCountCommand extends Command {
+    private MyServer myServer = MyServer.getInstance();
     public ClientsCountCommand() {
         setCommandName("count");
         setCommandDescription("Получение количества клиентов");
@@ -13,7 +14,7 @@ public class ClientsCountCommand extends Command {
 
     @Override
     public String runCommand(String author) {
-        int count = MyServer.getClientsCount();
+        int count = myServer.getClientsCount();
         StringBuilder sb = new StringBuilder("В данный момент ");
         switch (count) {
             case 1:
