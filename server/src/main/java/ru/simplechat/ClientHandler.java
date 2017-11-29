@@ -14,6 +14,7 @@ public class ClientHandler extends Thread {
     private BufferedReader in;
     private PrintWriter out;
     private String username;
+    private MyServer myServer = MyServer.getInstance();
 
     public ClientHandler(String ipAddr, int port) throws IOException {
         this(new Socket(ipAddr, port));
@@ -27,7 +28,6 @@ public class ClientHandler extends Thread {
         this.socket = socket1;
         in = new BufferedReader(new InputStreamReader(socket.getInputStream(), Charset.forName("UTF-8")));
         out = new PrintWriter(new BufferedWriter(new OutputStreamWriter(socket.getOutputStream(), StandardCharsets.UTF_8)), true);
-        start();
     }
 
     @Override
@@ -43,7 +43,7 @@ public class ClientHandler extends Thread {
                     continue;
                 }
                 if (!hasLogin) {
-                    hasLogin = checkLogin(inputString);
+                    hasLogin = myServer.createLogin(inputString, this);
                 } else {
                     if (!inputString.trim().equals(""))
                         if (inputString.trim().startsWith("-")) {
@@ -53,7 +53,7 @@ public class ClientHandler extends Thread {
                             }
                             out.println(CommandPool.runCommand(inputString.trim().substring(1), username));
                         } else {
-                            MyServer.sendToAllConnections(false, username, "[" + username + "]" + inputString);
+                            myServer.sendToAllConnections(false, username, "[" + username + "]" + inputString);
                         }
                 }
             } catch (Exception e) {
@@ -64,8 +64,8 @@ public class ClientHandler extends Thread {
                 }
                 loop = false;
                 if (username != null)
-                    MyServer.sendToAllConnections(false, username, username + " покинул(а) чат");
-                MyServer.deleteHandler(this);
+                    myServer.sendToAllConnections(false, username, username + " покинул(а) чат");
+                myServer.deleteHandler(this);
                 disconnect();
             }
         }
@@ -94,22 +94,6 @@ public class ClientHandler extends Thread {
         this.username = username;
     }
 
-    public boolean checkLogin(String login){
-        boolean newHasLogin = false;
-        if (login.trim().length() > 0 && !MyServer.loginExist(login)) {
-            newHasLogin = true;
-            username = login;
-            MyServer.getLastMessage().send(out);
-            MyServer.sendToAllConnections(true, username, username + " присоединился к чату");
-        } else {
-            try {
-                out.println("Этот логин уже занят");
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        }
-        return newHasLogin;
-    }
 
     @Override
     public String toString() {

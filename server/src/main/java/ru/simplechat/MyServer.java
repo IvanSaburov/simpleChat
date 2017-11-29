@@ -3,23 +3,28 @@ package ru.simplechat;
 import ru.simplechat.utils.LastMessage;
 import ru.simplechat.utils.PropertyLoader;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
+import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.nio.charset.Charset;
-import java.util.ArrayList;
+import java.nio.charset.StandardCharsets;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 public class MyServer {
 
-    private static ArrayList<ClientHandler> connections = new ArrayList<>();
-    private static LastMessage lastMessage;
+    private CopyOnWriteArrayList<ClientHandler> connections = new CopyOnWriteArrayList<>();
+    private LastMessage lastMessage;
     private static int PORT;
-    private static boolean repeat = true;
+    private boolean repeat = true;
+    private static MyServer instance = new MyServer();
+    private boolean isRunning = false;
 
     static {
         PORT = Integer.parseInt(PropertyLoader.getProperties().getProperty("PORT"));
+    }
+
+    public static MyServer getInstance() {
+        return instance;
     }
 
     public static void main(String[] args) {
@@ -28,23 +33,29 @@ public class MyServer {
                 try {
                     BufferedReader in = new BufferedReader(new InputStreamReader(System.in, Charset.forName("UTF-8")));
                     String input = in.readLine();
-                    tryRunCommand(input);
+                    instance.tryRunCommand(input);
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
             }
         };
         thread.start();
-        new MyServer();
+        instance.runServer();
     }
 
     private MyServer() {
+    }
+
+    public void runServer() {
+        if(isRunning) return;
         try (ServerSocket serverSocket = new ServerSocket(PORT)) {
             System.out.println("Сервер запущен ...");
+            isRunning = true;
             lastMessage = new LastMessage();
             while (repeat) {
                 try {
                     ClientHandler conn = new ClientHandler(serverSocket.accept());
+                    conn.start();
                     connections.add(conn);
                 } catch (IOException e) {
                     System.out.println("ClientHanler exception: " + e);
@@ -55,7 +66,7 @@ public class MyServer {
         }
     }
 
-    public static void sendToAllConnections(boolean sendToAuthor, String author, String value) {
+    public synchronized void sendToAllConnections(boolean sendToAuthor, String author, String value) {
         System.out.println(value);
         lastMessage.add(value);
 
@@ -67,15 +78,15 @@ public class MyServer {
         }
     }
 
-    public static boolean loginExist(String login) {
+    public synchronized boolean loginExist(String login) {
         return connections.stream().filter((p) -> p.getUsername() != null && p.getUsername().equals(login)).count() != 0l;
     }
 
-    public static void deleteHandler(ClientHandler clientHandler) {
+    public void deleteHandler(ClientHandler clientHandler) {
         if (connections.contains(clientHandler)) connections.remove(clientHandler);
     }
 
-    public static void tryRunCommand(String command) throws IOException {
+    public void tryRunCommand(String command) throws IOException {
         if (("-exit").equals(command)) {
             System.out.println("Остановка сервера...");
             repeat = false;
@@ -84,11 +95,30 @@ public class MyServer {
         }
     }
 
-    public static LastMessage getLastMessage() {
+    public synchronized boolean createLogin(String login, ClientHandler handler) throws Exception {
+        boolean hasLogin = false;
+        PrintWriter out = new PrintWriter(new BufferedWriter(
+                new OutputStreamWriter(handler.getSocket().getOutputStream(), StandardCharsets.UTF_8)), true);
+        if (login.trim().length() > 0 && !loginExist(login)) {
+            hasLogin = true;
+            handler.setUsername(login);
+            getLastMessage().send(out);
+            sendToAllConnections(true, handler.getUsername(), handler.getUsername() + " присоединился к чату");
+        } else {
+            try {
+                out.println("Этот логин уже занят");
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+        return hasLogin;
+    }
+
+    public LastMessage getLastMessage() {
         return lastMessage;
     }
 
-    public static Integer getClientsCount() {
+    public Integer getClientsCount() {
         return connections.size();
     }
 }
