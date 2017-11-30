@@ -1,42 +1,77 @@
 package ru.simplechat;
 
-import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import ru.simplechat.utils.LastMessage;
 
-import static org.junit.Assert.assertEquals;
+import java.net.Socket;
+import java.util.concurrent.CopyOnWriteArrayList;
+
+import static org.junit.Assert.*;
 
 /**
- * Created by Ivan on 21.11.2017.
+ * Created by Ivan on 30.11.2017.
  */
 public class MyServerTest {
-    ClientHandler clientHandler;
-    MyServer myServer = MyServer.getInstance();
-    Thread thread;
+    MyServer server;
+    private String host = "localhost";
+    private int port = 8989;
 
     @Before
-    public void before() throws Exception {
-        thread = new Thread() {
+    public void start() {
+        server = MyServer.getInstance();
+        Thread thread = new Thread() {
             public void run() {
-                MyServer.main(new String[0]);
+                server.runServer();
             }
         };
         thread.start();
     }
 
-    @After
-    public void after() throws Exception {
-        thread.interrupt();
-        clientHandler.disconnect();
+    @Test
+    public void testRunServer() throws Exception {
+        Socket socket = new Socket(host, port);
+        assertNotNull(socket);
+        Thread.sleep(100);
+        server.deleteHandler(getLastClient());
+        socket.close();
+    }
+
+
+    @Test
+    public void testLoginExist() throws Exception {
+        Socket socket = new Socket(host, port);
+        Thread.sleep(100);
+        getLastClient().setUsername("Tester");
+        assertTrue(server.loginExist("Tester"));
+        server.deleteHandler(getLastClient());
+        socket.close();
     }
 
     @Test
-    public void testDeleteHandler() throws Exception {
+    public void testCreateLogin() throws Exception {
+        Socket socket = new Socket(host, port);
+        Thread.sleep(100);
+        ClientHandler handler = getLastClient();
+        assertTrue(server.createLogin("User", handler));
+        server.deleteHandler(handler);
+        socket.close();
     }
 
     @Test
-    public void testGetClientsCount() throws Exception {
-        clientHandler = new ClientHandler("localhost", 8989);
-        assertEquals(new Integer(1), myServer.getClientsCount());
+    public void testGetLastMessage() throws Exception {
+        Socket socket = new Socket(host, port);
+        Thread.sleep(100);
+        ClientHandler handler = getLastClient();
+        server.createLogin("TestUser", handler);
+        LastMessage message = server.getLastMessage();
+        assertFalse(message.isEmpty());
+        server.deleteHandler(handler);
+        socket.close();
+    }
+
+    private ClientHandler getLastClient() {
+        CopyOnWriteArrayList<ClientHandler> list = server.getConnections();
+        return list.get(list.size() - 1);
     }
 }

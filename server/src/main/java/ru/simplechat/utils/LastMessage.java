@@ -21,4 +21,7 @@ public class LastMessage {
             out.println(str);
         }
     }
+    public boolean isEmpty(){
+        return list.isEmpty();
+    }
 }

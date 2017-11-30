@@ -48,10 +48,10 @@ public class ClientHandler extends Thread {
                     if (!inputString.trim().equals(""))
                         if (inputString.trim().startsWith("-")) {
                             if (inputString.trim().substring(1).equals("exit")) {
-                                out.println("Вы покинули чат");
+                                sendString("Вы покинули чат");
                                 throw new Exception("exit");
                             }
-                            out.println(CommandPool.runCommand(inputString.trim().substring(1), username));
+                            sendString(CommandPool.runCommand(inputString.trim().substring(1), username));
                         } else {
                             myServer.sendToAllConnections(false, username, "[" + username + "]" + inputString);
                         }
@@ -90,8 +90,12 @@ public class ClientHandler extends Thread {
         return username;
     }
 
-    public void setUsername(String username) {
+    public boolean setUsername(String username) {
+        if(myServer.loginExist(username)){
+            return false;
+        }
         this.username = username;
+        return true;
     }
 
 

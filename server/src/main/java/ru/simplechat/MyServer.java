@@ -47,21 +47,18 @@ public class MyServer {
     }
 
     public void runServer() {
-        if(isRunning) return;
-        try (ServerSocket serverSocket = new ServerSocket(PORT)) {
+        if (isRunning) return;
+        try(ServerSocket serverSocket = new ServerSocket(PORT)) {
             System.out.println("Сервер запущен ...");
             isRunning = true;
             lastMessage = new LastMessage();
             while (repeat) {
-                try {
-                    ClientHandler conn = new ClientHandler(serverSocket.accept());
-                    conn.start();
-                    connections.add(conn);
-                } catch (IOException e) {
-                    System.out.println("ClientHanler exception: " + e);
-                }
+                ClientHandler conn = new ClientHandler(serverSocket.accept());
+                conn.start();
+                connections.add(conn);
             }
         } catch (IOException e) {
+            System.out.println("ClientHanler exception: " + e);
             throw new RuntimeException(e);
         }
     }
@@ -90,6 +87,7 @@ public class MyServer {
         if (("-exit").equals(command)) {
             System.out.println("Остановка сервера...");
             repeat = false;
+            isRunning = false;
             Socket stopSocket = new Socket("localhost", PORT);
             stopSocket.close();
         }
@@ -112,6 +110,9 @@ public class MyServer {
             }
         }
         return hasLogin;
+    }
+    public CopyOnWriteArrayList<ClientHandler> getConnections(){
+        return connections;
     }
 
     public LastMessage getLastMessage() {
