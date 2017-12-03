@@ -1,35 +1,33 @@
 package ru.simplechat;
 
-import org.junit.After;
-import org.junit.Before;
+import org.junit.Test;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.net.Socket;
+
+import static org.junit.Assert.assertFalse;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 
 public class ClientHandlerTest {
-    List<ClientHandler> listClientHandler;
-    private MyServer myServer = MyServer.getInstance();
 
-    @Before
-    public void before() throws Exception {
-        Thread myServerThread = new Thread() {
-            public void run() {
-                MyServer.main(new String[0]);
-            }
-        };
-        myServerThread.start();
-        ClientHandler clientHandler = new ClientHandler("localhost", 8989);
-        clientHandler.setUsername("Tester");
-        listClientHandler = new ArrayList<>();
-        listClientHandler.add(clientHandler);
+    @Test
+    public void testSetUsername() throws Exception {
+        MyServer mockMyServer = mock(MyServer.class);
+        Socket mockSocket = mock(Socket.class);
+        OutputStream out = mock(OutputStream.class);
+        InputStream in = mock(InputStream.class);
+
+        when(mockSocket.getOutputStream()).thenReturn(out);
+        when(mockSocket.getInputStream()).thenReturn(in);
+
+        ClientHandler clientHandler = new ClientHandler(mockSocket);
+
+        clientHandler.myServer = mockMyServer;
+        when(mockMyServer.loginExist("testUser")).thenReturn(true);
+        assertFalse(clientHandler.setUsername("testUser"));
     }
 
-    @After
-    public void after() throws Exception {
-        for (ClientHandler clientHandler : listClientHandler) {
-            clientHandler.disconnect();
-        }
-        myServer.tryRunCommand("-exit");
-    }
 }

@@ -55,7 +55,6 @@ public class MyServer {
             while (repeat) {
                 ClientHandler conn = new ClientHandler(serverSocket.accept());
                 conn.start();
-                connections.add(conn);
             }
         } catch (IOException e) {
             System.out.println("ClientHanler exception: " + e);
@@ -100,6 +99,7 @@ public class MyServer {
         if (login.trim().length() > 0 && !loginExist(login)) {
             hasLogin = true;
             handler.setUsername(login);
+            connections.add(handler);
             getLastMessage().send(out);
             sendToAllConnections(true, handler.getUsername(), handler.getUsername() + " присоединился к чату");
         } else {

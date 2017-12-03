@@ -2,12 +2,16 @@ package ru.simplechat;
 
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.Mock;
 import ru.simplechat.utils.LastMessage;
 
+import java.io.OutputStream;
 import java.net.Socket;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 import static org.junit.Assert.*;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 /**
  * Created by Ivan on 30.11.2017.
@@ -16,6 +20,9 @@ public class MyServerTest {
     MyServer server;
     private String host = "localhost";
     private int port = 8989;
+
+    @Mock
+    CopyOnWriteArrayList<ClientHandler> clientsList;
 
     @Before
     public void start() {
@@ -32,46 +39,45 @@ public class MyServerTest {
     public void testRunServer() throws Exception {
         Socket socket = new Socket(host, port);
         assertNotNull(socket);
-        Thread.sleep(100);
-        server.deleteHandler(getLastClient());
         socket.close();
     }
 
 
     @Test
     public void testLoginExist() throws Exception {
-        Socket socket = new Socket(host, port);
-        Thread.sleep(100);
-        getLastClient().setUsername("Tester");
-        assertTrue(server.loginExist("Tester"));
-        server.deleteHandler(getLastClient());
-        socket.close();
+        ClientHandler mockClientHandler = mock(ClientHandler.class);
+        when(mockClientHandler.getUsername()).thenReturn("tester");
+        server.getConnections().add(mockClientHandler);
+        assertTrue(server.loginExist("tester"));
     }
 
     @Test
     public void testCreateLogin() throws Exception {
-        Socket socket = new Socket(host, port);
-        Thread.sleep(100);
-        ClientHandler handler = getLastClient();
-        assertTrue(server.createLogin("User", handler));
-        server.deleteHandler(handler);
-        socket.close();
+        Socket mockSocket = mock(Socket.class);
+        OutputStream out = mock(OutputStream.class);
+        ClientHandler mockClientHandler = mock(ClientHandler.class);
+
+        when(mockClientHandler.getSocket()).thenReturn(mockSocket);
+        when(mockClientHandler.getUsername()).thenReturn("User");
+        when(mockClientHandler.getSocket().getOutputStream()).thenReturn(out);
+
+        assertTrue(server.createLogin("User", mockClientHandler));
+        server.deleteHandler(mockClientHandler);
     }
 
     @Test
     public void testGetLastMessage() throws Exception {
-        Socket socket = new Socket(host, port);
-        Thread.sleep(100);
-        ClientHandler handler = getLastClient();
-        server.createLogin("TestUser", handler);
+        Socket mockSocket = mock(Socket.class);
+        OutputStream out = mock(OutputStream.class);
+        ClientHandler mockClientHandler = mock(ClientHandler.class);
+
+        when(mockClientHandler.getUsername()).thenReturn("TestUser");
+        when(mockClientHandler.getSocket()).thenReturn(mockSocket);
+        when(mockClientHandler.getSocket().getOutputStream()).thenReturn(out);
+
+        server.createLogin("TestUser", mockClientHandler);
         LastMessage message = server.getLastMessage();
         assertFalse(message.isEmpty());
-        server.deleteHandler(handler);
-        socket.close();
-    }
-
-    private ClientHandler getLastClient() {
-        CopyOnWriteArrayList<ClientHandler> list = server.getConnections();
-        return list.get(list.size() - 1);
+        server.deleteHandler(mockClientHandler);
     }
 }

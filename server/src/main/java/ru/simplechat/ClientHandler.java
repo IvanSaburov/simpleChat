@@ -14,7 +14,7 @@ public class ClientHandler extends Thread {
     private BufferedReader in;
     private PrintWriter out;
     private String username;
-    private MyServer myServer = MyServer.getInstance();
+    public MyServer myServer = MyServer.getInstance();
 
     public ClientHandler(String ipAddr, int port) throws IOException {
         this(new Socket(ipAddr, port));

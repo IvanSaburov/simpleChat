@@ -23,7 +23,8 @@ public class ClientTest {
     public void testCreateSocket() throws Exception {
         ServerSocket serverSocket = new ServerSocket(8888);
         Socket socket = client.createSocket("localhost", 8888);
-        serverSocket.accept();
         assertNotNull(socket);
+        socket.close();
+        serverSocket.close();
     }
 }
